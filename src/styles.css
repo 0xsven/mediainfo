@@ -7,7 +7,7 @@ body {
   margin: 0 auto;
 }
 .data {
-  margin-top: 50px;
+  margin-top: 20px;
 }
 .data label {
   width: 300px;
@@ -23,7 +23,7 @@ body {
 }
 
 .track {
-  margin: 20px 0;
+  margin: 5px 0;
 }
 
 .track .title {
