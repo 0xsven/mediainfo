@@ -134,16 +134,16 @@ function App() {
       />
       {data && (
         <div className="data">
-          <div>
-            <label>File name</label> {data.fileName}
-          </div>
-          {data.File.track.map(track =>
-            Object.keys(track).map(key => (
-              <div key={key}>
-                <label>{key}</label> {track[key]}
-              </div>
-            ))
-          )}
+          {data.File.track.map(track => (
+            <div className="track">
+              <div className="title">{track['_type']} Track</div>
+              {Object.keys(track).map(key => (
+                <div key={key} className="row">
+                  <label>{key}</label> {track[key]}
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       )}
     </div>

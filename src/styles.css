@@ -9,15 +9,25 @@ body {
 .data {
   margin-top: 50px;
 }
-.data div {
-  padding: 5px 20px;
-}
-.data div:nth-child(odd) {
-  background-color: #edeceb;
-}
 .data label {
   width: 300px;
   display: inline-block;
   font-weight: 600;
+  font-size: 80%;
+}
+.row {
+  padding: 5px 20px;
+}
+.track div:nth-child(odd) {
+  background-color: #edeceb;
+}
+
+.track {
+  margin: 20px 0;
+}
+
+.track .title {
+  padding: 5px 20px;
+  font-weight: 900;
   font-size: 80%;
 }
