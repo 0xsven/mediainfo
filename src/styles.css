@@ -1,6 +1,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
     sans-serif;
+  font-size: 12px;
 }
 .App {
   max-width: 1200px;
@@ -10,7 +11,7 @@ body {
   margin-top: 20px;
 }
 .data label {
-  width: 300px;
+  width: 150px;
   display: inline-block;
   font-weight: 600;
   font-size: 80%;
@@ -30,4 +31,13 @@ body {
   padding: 10px 20px;
   font-weight: 800;
   font-size: 80%;
+}
+
+@media (min-width: 700px) {
+  body {
+    font-size: 16px;
+  }
+  .data label {
+    width: 300px;
+  }
 }
