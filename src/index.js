@@ -40,6 +40,7 @@ const Obj = ({ obj }) => {
 };
 
 function App() {
+  const [isMediaInfoLoaded, setMediaInfoLoaded] = useState(false);
   const [files, setFiles] = useState([]);
   const [data, setData] = useState(null);
   // const miLib = useRef(null);
@@ -52,6 +53,7 @@ function App() {
     MediaInfoModule.current = window.MediaInfoLib({
       postRun: function() {
         console.debug('MediaInfo ready');
+        setMediaInfoLoaded(true);
       }
     });
   }, []);
@@ -139,6 +141,7 @@ function App() {
   return (
     <div className="App">
       <FilePond
+        disabled={!isMediaInfoLoaded}
         files={files}
         allowMultiple={false}
         onupdatefiles={setFiles}
