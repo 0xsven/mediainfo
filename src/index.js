@@ -17,111 +17,123 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 // Register the plugins
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
-const CHUNK_SIZE = 5 * 1024 * 1024;
+// const CHUNK_SIZE = 5 * 1024 * 1024;
+
+const Row = ({ name, value }) => {
+  return (
+    <div key={name} className="row">
+      <label>{name}</label> {value}
+    </div>
+  );
+};
+
+const Obj = ({ obj }) => {
+  return Object.keys(obj).map(key => {
+    const value = obj[key];
+    if (key === '@type') return null;
+    if (typeof value === 'object') {
+      return <Obj key={key} obj={value} />;
+    }
+    if (typeof obj[key] !== 'string') return null;
+    return <Row key={key} name={key} value={value} />;
+  });
+};
 
 function App() {
   const [files, setFiles] = useState([]);
   const [data, setData] = useState(null);
-  const miLib = useRef(null);
+  // const miLib = useRef(null);
   const mi = useRef(null);
-  const x2js = useRef(null);
+  // const x2js = useRef(null);
   const processing = useRef(false);
+  const MediaInfoModule = useRef(false);
 
   useEffect(() => {
-    miLib.current = window.MediaInfo(function() {
-      mi.current = new miLib.current.MediaInfo();
+    MediaInfoModule.current = window.MediaInfoLib({
+      postRun: function() {
+        console.debug('MediaInfo ready');
+      }
     });
-    x2js.current = new window.X2JS();
   }, []);
 
-  function addResult(name, result) {
-    const resultObj = x2js.current.xml_str2json(result);
-    resultObj.date = new Date();
-    resultObj.fileName = name;
-    setData(resultObj);
-  }
+  const finish = function() {
+    mi.current.Close();
+    mi.current.delete();
+    processing.current = false;
+  };
 
-  function parseFile(file) {
+  var parseFile = function(file, callback) {
     if (processing.current) {
       return;
     }
     processing.current = true;
 
-    var fileSize = file.size,
-      offset = 0,
-      state = 0,
-      // seekTo = -1,
-      seek = null;
+    // var offset = 0;
 
-    mi.current.open_buffer_init(fileSize, offset);
+    // Initialise MediaInfo
+    mi.current = new MediaInfoModule.current.MediaInfo();
 
-    var processChunk = function(e) {
-      var l;
-      if (e.target.error === null) {
-        var chunk = new Uint8Array(e.target.result);
-        l = chunk.length;
-        state = mi.current.open_buffer_continue(chunk, l);
+    //Open the file
+    mi.current.Open(file, callback);
 
-        var seekTo = -1;
-        var seekToLow = mi.current.open_buffer_continue_goto_get_lower();
-        var seekToHigh = mi.current.open_buffer_continue_goto_get_upper();
+    /* By buffer example:
+    mi.current.Option('File_FileName', file.name);
+    mi.current.Open_Buffer_Init(file.size, 0);
 
-        if (seekToLow === -1 && seekToHigh === -1) {
-          seekTo = -1;
-        } else if (seekToLow < 0) {
-          seekTo = seekToLow + 4294967296 + seekToHigh * 4294967296;
-        } else {
-          seekTo = seekToLow + seekToHigh * 4294967296;
-        }
-
-        if (seekTo === -1) {
-          offset += l;
-        } else {
-          offset = seekTo;
-          mi.current.open_buffer_init(fileSize, seekTo);
-        }
-        chunk = null;
-      } else {
-        var msg = 'An error happened reading your file!';
-        console.err(msg, e.target.error);
-        processingDone();
-        alert(msg);
-        return;
-      }
-      // bit 4 set means finalized
-      if (state & 0x08) {
-        var result = mi.current.inform();
-        mi.current.close();
-        addResult(file.name, result);
-        processingDone();
-        return;
-      }
-      seek(l);
-    };
-
-    function processingDone() {
-      processing.current = false;
-    }
-
-    seek = function(length) {
+    var loop = function(length) {
       if (processing.current) {
         var r = new FileReader();
-        var blob = file.slice(offset, length + offset);
+        var blob = file.slice(offset, offset + length);
         r.onload = processChunk;
         r.readAsArrayBuffer(blob);
       } else {
-        mi.current.close();
-        processingDone();
+        finish()
       }
     };
 
-    // start
-    seek(CHUNK_SIZE);
-  }
+    var processChunk = function(e) {
+      if (e.target.error === null) {
+        // Send the buffer to MediaInfo
+        var state = mi.current.Open_Buffer_Continue(e.target.result);
+
+        //Test if there is a MediaInfo request to go elsewhere
+        var seekTo = mi.current.Open_Buffer_Continue_Goto_Get();
+        if(seekTo === -1) {
+          offset += e.target.result.byteLength;
+        } else {
+          offset = seekTo;
+          mi.current.Open_Buffer_Init(file.size, seekTo); // Inform MediaInfo we have seek
+        }
+      } else {
+        finish();
+        alert('An error happened reading your file!');
+        return;
+      }
+
+      // Bit 3 set means finalized
+      if (state&0x08 || e.target.result.byteLength < 1) {
+        mi.current.Open_Buffer_Finalize();
+        callback();
+        return;
+      }
+
+      loop(CHUNK_SIZE);
+    };
+
+     // Start
+    loop(CHUNK_SIZE);*/
+  };
 
   useEffect(() => {
-    if (files.length > 0) parseFile(files[0].file);
-    else setData(null);
+    if (files.length > 0)
+      parseFile(files[0].file, () => {
+        mi.current.Option('Inform', 'JSON');
+        setData(JSON.parse(mi.current.Inform()));
+      });
+    else {
+      setData(null);
+      if (mi.current) finish();
+    }
   }, [files]);
 
   return (
@@ -134,14 +146,10 @@ function App() {
       />
       {data && (
         <div className="data">
-          {data.File.track.map(track => (
-            <div className="track">
-              <div className="title">{track['_type']} Track</div>
-              {Object.keys(track).map(key => (
-                <div key={key} className="row">
-                  <label>{key}</label> {track[key]}
-                </div>
-              ))}
+          {data.media.track.map(track => (
+            <div className="track" key={track['@type']}>
+              <div className="title">{track['@type']}</div>
+              <Obj obj={track} />
             </div>
           ))}
         </div>

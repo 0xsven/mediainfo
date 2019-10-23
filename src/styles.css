@@ -20,11 +20,13 @@ body {
   padding: 5px 20px;
 }
 .track div:nth-child(odd) {
-  background-color: #edeceb;
+  background-color: #f1f0ef;
 }
 
 .track {
-  margin: 5px 0;
+  margin: 20px 0;
+  border-radius: 0.5em;
+  overflow: hidden;
 }
 
 .track .title {
